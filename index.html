@@ -870,8 +870,27 @@
       a.pts += calcPoints(g.scoreA,g.scoreB); b.pts += calcPoints(g.scoreB,g.scoreA);
       if(g.scoreA>g.scoreB) a.v++; else b.v++;
     });
+    // Confronto direto entre duas equipes: 1 se x venceu y, -1 se x perdeu,
+    // 0 se não se enfrentaram (turno único → no máximo um jogo entre elas).
+    function confrontoDireto(xId, yId){
+      for(var i=0;i<state.games.length;i++){
+        var g = state.games[i];
+        if(g.status!=="finalizado") continue;
+        if(g.teamA===xId && g.teamB===yId) return g.scoreA>g.scoreB ? 1 : -1;
+        if(g.teamA===yId && g.teamB===xId) return g.scoreB>g.scoreA ? 1 : -1;
+      }
+      return 0;
+    }
+    // Ordem oficial de desempate (entre equipes com os mesmos pontos na tabela):
+    // confronto direto → total de pontos (pró) → saldo de pontos → vitórias →
+    // sorteio (aqui mantemos ordem estável em vez de sortear).
     return Object.values(stats).sort(function(x,y){
-      return (y.pts-x.pts) || (y.v-x.v) || (y.saldo-x.saldo) || (y.pp-x.pp);
+      if(y.pts !== x.pts) return y.pts - x.pts;
+      var h = confrontoDireto(x.id, y.id);
+      if(h !== 0) return -h;
+      if(y.pp !== x.pp) return y.pp - x.pp;
+      if(y.saldo !== x.saldo) return y.saldo - x.saldo;
+      return y.v - x.v;
     });
   }
 
@@ -1086,7 +1105,7 @@
         '<tr><td>Derrota com diferença de 1 ou 2 pontos</td><td class="num tabular">1</td></tr>'+
         '<tr><td>Derrota com diferença ≥ 3 pontos</td><td class="num tabular">0</td></tr>'+
         '</tbody></table></div>'+
-        '<p class="helptext" style="margin-top:10px">Desempate, nesta ordem: pontos na tabela → vitórias → saldo de pontos → pontos pró.</p>'+
+        '<p class="helptext" style="margin-top:10px">Desempate, nesta ordem: confronto direto → total de pontos → saldo de pontos → vitórias → sorteio.</p>'+
       '</div>';
   }
 
@@ -1354,14 +1373,12 @@
 
   /* ---------------- views: REGRAS ---------------- */
   function viewRegras(){
-    // Marcador reutilizável para itens que são sugestão da organização e ainda
-    // dependem de confirmação (formato de jogo, jogadores em quadra, tolerância
-    // de atraso). Assim fica visível o que já está fechado e o que falta decidir.
-    var aConfirmar = '<span class="pill pill-warning" title="Sugestão da organização — a confirmar">a confirmar</span>';
+    // Item de lista padrão do regulamento (bullet + texto).
+    function li(html){ return '<li>'+html+'</li>'; }
 
     return '<div class="page-head"><div>'+
-        '<div class="eyebrow">Informações</div><h2 class="page-title">Regras & informações</h2>'+
-        '<p class="page-sub">Regulamento do Torneio Hibernação Zero 2026 · 4Bros Beach Volley</p>'+
+        '<div class="eyebrow">Regulamento</div><h2 class="page-title">Regras &amp; informações</h2>'+
+        '<p class="page-sub">Torneio Hibernação Zero 2026 · 4Bros Beach Volley · evento recreativo</p>'+
       '</div></div>'+
       '<div class="stack">'+
 
@@ -1379,44 +1396,25 @@
           '</dl>'+
         '</div>'+
 
-        // ---- Estrutura do torneio ----
+        // ---- Sistema de jogo ----
         '<div class="card">'+
-          '<div class="card-title" style="margin-bottom:10px">Estrutura do torneio</div>'+
-          '<p style="font-size:13.5px"><strong>Fase de grupos:</strong> turno único, todos contra todos — 36 confrontos no total. Do 1º ao 8º lugar avançam aos playoffs; o 9º é eliminado.</p>'+
-          '<p style="font-size:13.5px;margin-top:8px"><strong>Playoffs (mata-mata):</strong> os 8 classificados se enfrentam em chave de eliminatória até a grande final.</p>'+
-          '<div class="tablewrap" style="margin-top:10px"><table class="rules-table"><tbody>'+
-            '<tr><td style="font-weight:700">Quartas de final</td><td>Jogo único · 1º×8º, 2º×7º, 3º×6º, 4º×5º</td></tr>'+
-            '<tr><td style="font-weight:700">Semifinais</td><td>Jogo único · vencedores das quartas (QF1×QF2, QF3×QF4)</td></tr>'+
-            '<tr><td style="font-weight:700">Disputa de 3º lugar</td><td>Set único · perdedores das semifinais</td></tr>'+
-            '<tr><td style="font-weight:700">Grande final</td><td>Melhor de 3 sets · vencedores das semifinais</td></tr>'+
-          '</tbody></table></div>'+
-        '</div>'+
-
-        // ---- Como cada jogo é disputado ----
-        '<div class="card">'+
-          '<div class="card-title" style="margin-bottom:8px">Como cada jogo é disputado</div>'+
-          '<div class="row" style="gap:8px;margin-bottom:12px;align-items:flex-start">'+aConfirmar+
-            '<span class="helptext" style="margin:0">Os itens marcados abaixo são sugestões da organização e podem ser ajustados antes do torneio começar.</span>'+
-          '</div>'+
-          '<dl class="kv">'+
-            '<dt>Jogadores em quadra</dt><dd>4 contra 4, com o 5º jogador como reserva (substituições livres entre os pontos) '+aConfirmar+'</dd>'+
-            '<dt>Contagem</dt><dd>Ponto corrido (rally point) — todo rali vale ponto para quem vencer o lance</dd>'+
-            '<dt>Vantagem</dt><dd>É preciso vencer o set com pelo menos 2 pontos de diferença</dd>'+
-            '<dt>Saque</dt><dd>Alternado a cada ponto conquistado, conforme regra do vôlei</dd>'+
-          '</dl>'+
+          '<div class="card-title" style="margin-bottom:10px">Sistema de jogo</div>'+
+          '<p style="font-size:13.5px"><strong>Fase classificatória:</strong> todos contra todos em turno único — cada equipe enfrenta as demais uma única vez. Do 1º ao 8º lugar avançam aos playoffs; a 9ª equipe fica de fora.</p>'+
           '<div class="tablewrap" style="margin-top:12px"><table class="rules-table">'+
             '<thead><tr><th>Fase</th><th>Formato do jogo</th></tr></thead><tbody>'+
-            '<tr><td style="font-weight:700">Fase de grupos</td><td>1 set até 15 pontos '+aConfirmar+'</td></tr>'+
-            '<tr><td style="font-weight:700">Quartas / Semifinais</td><td>Jogo único · 1 set até 21 pontos '+aConfirmar+'</td></tr>'+
-            '<tr><td style="font-weight:700">Disputa de 3º lugar</td><td>Set único até 21 pontos</td></tr>'+
-            '<tr><td style="font-weight:700">Grande final</td><td>Melhor de 3 · sets até 21; set decisivo (3º) até 15</td></tr>'+
+            '<tr><td style="font-weight:700">Classificatória</td><td>Set único até 15 pontos (vantagem de 2, no máximo 21)</td></tr>'+
+            '<tr><td style="font-weight:700">Quartas de final</td><td>Jogo único · set único até 15 (no máximo 21) · 1º×8º, 2º×7º, 3º×6º, 4º×5º</td></tr>'+
+            '<tr><td style="font-weight:700">Semifinais</td><td>Jogo único · set único até 15 (no máximo 21) · vencedores das quartas (J1×J2, J3×J4)</td></tr>'+
+            '<tr><td style="font-weight:700">Disputa de 3º lugar</td><td>Perdedores das semifinais</td></tr>'+
+            '<tr><td style="font-weight:700">Grande final</td><td>Vencedores das semifinais · melhor de 3 sets, cada set até 15</td></tr>'+
           '</tbody></table></div>'+
+          '<p class="helptext" style="margin-top:10px">Quem perde a grande final fica em 2º lugar; quem vence é o campeão do Hibernação Zero 2026. Nas disputas finais, cada set é jogado em lados diferentes da quadra.</p>'+
         '</div>'+
 
-        // ---- Pontuação na tabela & desempate ----
+        // ---- Pontuação da 1ª fase & desempate ----
         '<div class="card">'+
-          '<div class="card-title" style="margin-bottom:10px">Pontuação na tabela &amp; desempate</div>'+
-          '<p class="helptext" style="margin-bottom:10px">Vale para a fase de grupos. Os pontos na tabela dependem da diferença do placar em cada jogo:</p>'+
+          '<div class="card-title" style="margin-bottom:10px">Pontuação da 1ª fase &amp; desempate</div>'+
+          '<p class="helptext" style="margin-bottom:10px">Os pontos na tabela dependem da diferença do placar em cada jogo:</p>'+
           '<div class="tablewrap"><table class="rules-table">'+
             '<thead><tr><th>Resultado</th><th class="num">Pontos</th></tr></thead><tbody>'+
             '<tr><td>Vitória com diferença ≥ 3 pontos</td><td class="num tabular">3</td></tr>'+
@@ -1424,24 +1422,69 @@
             '<tr><td>Derrota com diferença de 1 ou 2 pontos</td><td class="num tabular">1</td></tr>'+
             '<tr><td>Derrota com diferença ≥ 3 pontos</td><td class="num tabular">0</td></tr>'+
           '</tbody></table></div>'+
-          '<p class="helptext" style="margin-top:10px">Critério de desempate, nesta ordem: pontos na tabela → vitórias → saldo de pontos → pontos pró.</p>'+
+          '<p style="font-size:13px;margin-top:12px;font-weight:700">Critério de desempate, nesta ordem:</p>'+
+          '<ol style="font-size:13px;margin:6px 0 0;padding-left:20px;line-height:1.7">'+
+            '<li>Confronto direto</li>'+
+            '<li>Total de pontos nos jogos</li>'+
+            '<li>Saldo de pontos (pontos feitos − pontos sofridos)</li>'+
+            '<li>Maior número de vitórias</li>'+
+            '<li>Persistindo o empate: sorteio</li>'+
+          '</ol>'+
         '</div>'+
 
-        // ---- Conduta, atrasos e W.O. ----
+        // ---- Regras gerais ----
         '<div class="card">'+
-          '<div class="card-title" style="margin-bottom:10px">Conduta, atrasos e W.O.</div>'+
+          '<div class="card-title" style="margin-bottom:10px">Regras gerais</div>'+
           '<ul style="font-size:13.5px;margin:0;padding-left:18px;line-height:1.7">'+
-            '<li>Tolerância de <strong>10 minutos</strong> após a chamada do jogo; passado esse tempo, a equipe ausente perde por W.O. '+aConfirmar+'</li>'+
-            '<li>Em caso de W.O., a vitória é registrada para a equipe presente como vitória com diferença ≥ 3 (3 pontos na tabela).</li>'+
-            '<li>Respeito à arbitragem e às equipes adversárias — fair play acima de tudo.</li>'+
-            '<li>Casos omissos neste regulamento são resolvidos pela organização, cuja decisão é final.</li>'+
+            li('Aquecimento de 5 minutos apenas no primeiro jogo de cada equipe. Depois, as partidas ocorrem de forma sequencial, sem novo aquecimento.')+
+            li('Cada equipe tem direito a 1 pedido de tempo de 30 segundos por set.')+
+            li('<strong>Rodízio:</strong> os cinco jogadores jogam em sequência. Após o saque, a movimentação e a troca de posições são livres, voltando à formação antes de cada saque; quem estiver fora da quadra é o reserva (rotativo). <strong>Todos jogam</strong>, respeitando a rotação — não se mantêm quatro fixos.')+
+            li('Não haverá substituições.')+
+            li('Apenas o capitão pode se dirigir ao árbitro.')+
+            li('A regra dos 2 toques no levantamento é flexibilizada (caráter recreativo). As demais regras — rotação, toque na rede, condução, etc. — são seguidas normalmente.')+
+            li('O saque inicial é da equipe que vencer a disputa (par ou ímpar, cara ou coroa, ou definido pelo juiz); a escolha do lado da quadra é da equipe adversária.')+
+            li('Sem troca de quadra durante o set. Somente nas disputas finais cada set é jogado em lados diferentes.')+
+            li('As partidas começam logo após o término da anterior, desde que as duas equipes já estejam disponíveis. Pausa para hidratação de 2 minutos pode ser feita antes de iniciar a partida, se solicitada.')+
+            li('Em disputa de ponto entre capitães, o árbitro decide conforme seu julgamento ou anula o ponto e pede a repetição do saque.')+
+            li('Arbitragem colaborativa — os árbitros são convocados pela organização. O registro dos resultados é feito pela equipe de apoio designada.')+
+            li('Trocas de jogadores só com aviso prévio e aprovação da Comissão Organizadora, e sempre com integrantes do 4BROS.')+
+          '</ul>'+
+        '</div>'+
+
+        // ---- Atrasos, W.O. e penalidades ----
+        '<div class="card">'+
+          '<div class="card-title" style="margin-bottom:10px">Atrasos, W.O. e penalidades</div>'+
+          '<ul style="font-size:13.5px;margin:0;padding-left:18px;line-height:1.7">'+
+            li('Se a equipe não se apresentar com quatro integrantes, há tolerância de <strong>3 minutos</strong> para se organizar; caso contrário, perde a partida automaticamente (W.O.).')+
+            li('A equipe que se apresentar para jogar somente com quatro integrantes inicia a partida com uma <strong>penalidade de 3 pontos</strong>.')+
+            li('Casos omissos neste regulamento são resolvidos pela organização, cuja decisão é final. A organização pode ajustar cronograma ou formato de disputa se necessário, comunicando os capitães.')+
+          '</ul>'+
+        '</div>'+
+
+        // ---- Conduta (destaque) ----
+        '<div class="card" style="border-color:var(--danger)">'+
+          '<div class="row" style="gap:8px;margin-bottom:8px;align-items:center">'+
+            '<span class="pill" style="background:var(--danger);color:#fff">Conduta</span>'+
+            '<span class="card-title" style="margin:0">Antidesportividade</span>'+
+          '</div>'+
+          '<p style="font-size:13.5px;font-weight:600;color:var(--danger)">Atitudes de violência física, verbal ou conduta antidesportiva contra atletas, arbitragem, organizadores ou espectadores resultam em desclassificação imediata do participante ou da equipe.</p>'+
+        '</div>'+
+
+        // ---- Formação dos times ----
+        '<div class="card">'+
+          '<div class="card-title" style="margin-bottom:10px">Formação dos times</div>'+
+          '<ul style="font-size:13.5px;margin:0;padding-left:18px;line-height:1.7">'+
+            li('9 equipes com 5 jogadores cada.')+
+            li('Cada equipe escolhe o seu capitão para coordenar o time.')+
+            li('O capitão é a referência da equipe: conversa com a organização e a arbitragem quando necessário (sempre com respeito), mantém o grupo alinhado, incentiva e organiza. Define, junto com o time, o nome da equipe conforme a temática, e escolhe quem joga em cada partida e as rotações.')+
+            li('O nome da equipe segue o tema <strong>INVERNO</strong>.')+
           '</ul>'+
         '</div>'+
 
         // ---- Uniforme ----
         '<div class="card">'+
-          '<div class="card-title" style="margin-bottom:10px">Regulamento de uniforme</div>'+
-          '<p style="font-size:13.5px">Proibido o uso de uniformes de outros times. Usar camisa 4BROS ou cor clara/lisa.</p>'+
+          '<div class="card-title" style="margin-bottom:10px">Uniforme</div>'+
+          '<p style="font-size:13.5px">Todos podem usar o uniforme do 4BROS e recebem um adesivo com o escudo do seu time. <strong>Não é permitido</strong> utilizar uniformes de outros times. As equipes podem usar coletes, camisetas ou regatas de mesma cor, se preferirem — evitando infortúnios desnecessários.</p>'+
         '</div>'+
       '</div>';
   }
