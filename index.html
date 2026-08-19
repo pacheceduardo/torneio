@@ -1354,10 +1354,18 @@
 
   /* ---------------- views: REGRAS ---------------- */
   function viewRegras(){
+    // Marcador reutilizável para itens que são sugestão da organização e ainda
+    // dependem de confirmação (formato de jogo, jogadores em quadra, tolerância
+    // de atraso). Assim fica visível o que já está fechado e o que falta decidir.
+    var aConfirmar = '<span class="pill pill-warning" title="Sugestão da organização — a confirmar">a confirmar</span>';
+
     return '<div class="page-head"><div>'+
         '<div class="eyebrow">Informações</div><h2 class="page-title">Regras & informações</h2>'+
+        '<p class="page-sub">Regulamento do Torneio Hibernação Zero 2026 · 4Bros Beach Volley</p>'+
       '</div></div>'+
       '<div class="stack">'+
+
+        // ---- Informações vitais ----
         '<div class="card">'+
           '<div class="card-title" style="margin-bottom:10px">Informações vitais</div>'+
           '<dl class="kv">'+
@@ -1365,25 +1373,72 @@
             '<dt>Valor</dt><dd>R$ 200,00 por equipe (R$ 40,00 por jogador)</dd>'+
             '<dt>Pix</dt><dd class="row" style="gap:8px"><span class="tabular">96319755091</span><span class="pill pill-muted">Moisés · C6 Bank</span>'+
               '<button class="btn btn-sm" id="btn-copy-pix">Copiar</button></dd>'+
+            '<dt>Equipes</dt><dd>9 equipes · 5 jogadores por equipe</dd>'+
             '<dt>Quadras</dt><dd>2 quadras simultâneas</dd>'+
             '<dt>Ritmo</dt><dd>~10–12 jogos a cada 2h · fase de grupos ≈ 2h</dd>'+
           '</dl>'+
         '</div>'+
+
+        // ---- Estrutura do torneio ----
         '<div class="card">'+
-          '<div class="card-title" style="margin-bottom:10px">Fase classificatória</div>'+
-          '<p style="font-size:13.5px">Turno único, todos contra todos — 36 confrontos no total.</p>'+
-          '<p class="helptext" style="margin-top:8px">Critério de desempate: pontos na tabela → vitórias → saldo de pontos → pontos pró.</p>'+
-        '</div>'+
-        '<div class="card">'+
-          '<div class="card-title" style="margin-bottom:10px">Playoffs (mata-mata)</div>'+
-          '<p style="font-size:13.5px">Do 1º ao 8º lugar avançam (9º eliminado).</p>'+
+          '<div class="card-title" style="margin-bottom:10px">Estrutura do torneio</div>'+
+          '<p style="font-size:13.5px"><strong>Fase de grupos:</strong> turno único, todos contra todos — 36 confrontos no total. Do 1º ao 8º lugar avançam aos playoffs; o 9º é eliminado.</p>'+
+          '<p style="font-size:13.5px;margin-top:8px"><strong>Playoffs (mata-mata):</strong> os 8 classificados se enfrentam em chave de eliminatória até a grande final.</p>'+
           '<div class="tablewrap" style="margin-top:10px"><table class="rules-table"><tbody>'+
             '<tr><td style="font-weight:700">Quartas de final</td><td>Jogo único · 1º×8º, 2º×7º, 3º×6º, 4º×5º</td></tr>'+
-            '<tr><td style="font-weight:700">Semifinais</td><td>Jogo único · vencedores dos confrontos das quartas</td></tr>'+
+            '<tr><td style="font-weight:700">Semifinais</td><td>Jogo único · vencedores das quartas (QF1×QF2, QF3×QF4)</td></tr>'+
             '<tr><td style="font-weight:700">Disputa de 3º lugar</td><td>Set único · perdedores das semifinais</td></tr>'+
             '<tr><td style="font-weight:700">Grande final</td><td>Melhor de 3 sets · vencedores das semifinais</td></tr>'+
           '</tbody></table></div>'+
         '</div>'+
+
+        // ---- Como cada jogo é disputado ----
+        '<div class="card">'+
+          '<div class="card-title" style="margin-bottom:8px">Como cada jogo é disputado</div>'+
+          '<div class="row" style="gap:8px;margin-bottom:12px;align-items:flex-start">'+aConfirmar+
+            '<span class="helptext" style="margin:0">Os itens marcados abaixo são sugestões da organização e podem ser ajustados antes do torneio começar.</span>'+
+          '</div>'+
+          '<dl class="kv">'+
+            '<dt>Jogadores em quadra</dt><dd>4 contra 4, com o 5º jogador como reserva (substituições livres entre os pontos) '+aConfirmar+'</dd>'+
+            '<dt>Contagem</dt><dd>Ponto corrido (rally point) — todo rali vale ponto para quem vencer o lance</dd>'+
+            '<dt>Vantagem</dt><dd>É preciso vencer o set com pelo menos 2 pontos de diferença</dd>'+
+            '<dt>Saque</dt><dd>Alternado a cada ponto conquistado, conforme regra do vôlei</dd>'+
+          '</dl>'+
+          '<div class="tablewrap" style="margin-top:12px"><table class="rules-table">'+
+            '<thead><tr><th>Fase</th><th>Formato do jogo</th></tr></thead><tbody>'+
+            '<tr><td style="font-weight:700">Fase de grupos</td><td>1 set até 15 pontos '+aConfirmar+'</td></tr>'+
+            '<tr><td style="font-weight:700">Quartas / Semifinais</td><td>Jogo único · 1 set até 21 pontos '+aConfirmar+'</td></tr>'+
+            '<tr><td style="font-weight:700">Disputa de 3º lugar</td><td>Set único até 21 pontos</td></tr>'+
+            '<tr><td style="font-weight:700">Grande final</td><td>Melhor de 3 · sets até 21; set decisivo (3º) até 15</td></tr>'+
+          '</tbody></table></div>'+
+        '</div>'+
+
+        // ---- Pontuação na tabela & desempate ----
+        '<div class="card">'+
+          '<div class="card-title" style="margin-bottom:10px">Pontuação na tabela &amp; desempate</div>'+
+          '<p class="helptext" style="margin-bottom:10px">Vale para a fase de grupos. Os pontos na tabela dependem da diferença do placar em cada jogo:</p>'+
+          '<div class="tablewrap"><table class="rules-table">'+
+            '<thead><tr><th>Resultado</th><th class="num">Pontos</th></tr></thead><tbody>'+
+            '<tr><td>Vitória com diferença ≥ 3 pontos</td><td class="num tabular">3</td></tr>'+
+            '<tr><td>Vitória com diferença de 1 ou 2 pontos</td><td class="num tabular">2</td></tr>'+
+            '<tr><td>Derrota com diferença de 1 ou 2 pontos</td><td class="num tabular">1</td></tr>'+
+            '<tr><td>Derrota com diferença ≥ 3 pontos</td><td class="num tabular">0</td></tr>'+
+          '</tbody></table></div>'+
+          '<p class="helptext" style="margin-top:10px">Critério de desempate, nesta ordem: pontos na tabela → vitórias → saldo de pontos → pontos pró.</p>'+
+        '</div>'+
+
+        // ---- Conduta, atrasos e W.O. ----
+        '<div class="card">'+
+          '<div class="card-title" style="margin-bottom:10px">Conduta, atrasos e W.O.</div>'+
+          '<ul style="font-size:13.5px;margin:0;padding-left:18px;line-height:1.7">'+
+            '<li>Tolerância de <strong>10 minutos</strong> após a chamada do jogo; passado esse tempo, a equipe ausente perde por W.O. '+aConfirmar+'</li>'+
+            '<li>Em caso de W.O., a vitória é registrada para a equipe presente como vitória com diferença ≥ 3 (3 pontos na tabela).</li>'+
+            '<li>Respeito à arbitragem e às equipes adversárias — fair play acima de tudo.</li>'+
+            '<li>Casos omissos neste regulamento são resolvidos pela organização, cuja decisão é final.</li>'+
+          '</ul>'+
+        '</div>'+
+
+        // ---- Uniforme ----
         '<div class="card">'+
           '<div class="card-title" style="margin-bottom:10px">Regulamento de uniforme</div>'+
           '<p style="font-size:13.5px">Proibido o uso de uniformes de outros times. Usar camisa 4BROS ou cor clara/lisa.</p>'+
