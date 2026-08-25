@@ -1633,6 +1633,7 @@
         '<div class="card">'+
           '<div class="card-title" style="margin-bottom:10px">Informações vitais</div>'+
           '<dl class="kv">'+
+            '<dt>Data e local</dt><dd>30/08/2026, a partir das 14h · Quadra TOP SPIN</dd>'+
             '<dt>Inscrição até</dt><dd>07/08/2026</dd>'+
             '<dt>Valor</dt><dd>R$ 200,00 por equipe (R$ 40,00 por jogador)</dd>'+
             '<dt>Pix</dt><dd class="row" style="gap:8px"><span class="tabular">96319755091</span><span class="pill pill-muted">Moisés · C6 Bank</span>'+
@@ -1677,34 +1678,56 @@
             '<li>Maior número de vitórias</li>'+
             '<li>Persistindo o empate: sorteio</li>'+
           '</ol>'+
+          '<p class="helptext" style="margin-top:12px">As equipes ficam num ranking de 01 a 09, alimentado pelas vitórias; pontos podem ser descontados por penalidades (ver "Atrasos e penalidades").</p>'+
         '</div>'+
 
         // ---- Regras gerais ----
         '<div class="card">'+
           '<div class="card-title" style="margin-bottom:10px">Regras gerais</div>'+
           '<ul style="font-size:13.5px;margin:0;padding-left:18px;line-height:1.7">'+
+            li('O torneio começa às <strong>14h do dia 30/08</strong>, na quadra da <strong>TOP SPIN</strong>.')+
             li('Aquecimento de 5 minutos apenas no primeiro jogo de cada equipe. Depois, as partidas ocorrem de forma sequencial, sem novo aquecimento.')+
-            li('Cada equipe tem direito a 1 pedido de tempo de 30 segundos por set.')+
-            li('<strong>Rodízio:</strong> os cinco jogadores jogam em sequência. Após o saque, a movimentação e a troca de posições são livres, voltando à formação antes de cada saque; quem estiver fora da quadra é o reserva (rotativo). <strong>Todos jogam</strong>, respeitando a rotação — não se mantêm quatro fixos.')+
+            li('Cada equipe tem direito a 1 pedido de tempo de 30 segundos por set (haverá placas de pedido de tempo em quadra para cada equipe).')+
+            li('<strong>Rodízio:</strong> os cinco jogadores jogam em sequência. Após o saque, a movimentação em quadra é livre, mas todos retornam à formação de rotação antes de cada novo saque; quem estiver fora da quadra é o reserva rotativo. <strong>Todos jogam</strong> — não se mantêm quatro fixos.')+
             li('Não haverá substituições.')+
-            li('Apenas o capitão pode se dirigir ao árbitro.')+
+            li('<strong>Só o capitão fala com o árbitro</strong> (para evitar aglomeração na arbitragem). Cada equipe deve providenciar uma braçadeira para identificar o capitão. Descumprir custa <strong>−1 ponto</strong> no ranking.')+
             li('A regra dos 2 toques no levantamento é flexibilizada (caráter recreativo). As demais regras — rotação, toque na rede, condução, etc. — são seguidas normalmente.')+
             li('O saque inicial é da equipe que vencer a disputa (par ou ímpar, cara ou coroa, ou definido pelo juiz); a escolha do lado da quadra é da equipe adversária.')+
-            li('Sem troca de quadra durante o set. Somente nas disputas finais cada set é jogado em lados diferentes.')+
-            li('As partidas começam logo após o término da anterior, desde que as duas equipes já estejam disponíveis. Pausa para hidratação de 2 minutos pode ser feita antes de iniciar a partida, se solicitada.')+
+            li('Turno único: todas as equipes se enfrentam uma única vez na fase de classificação.')+
+            li('Sem troca de lado durante o set. Somente nas disputas finais cada set é jogado em lados diferentes.')+
+            li('As partidas começam logo após o término da anterior, desde que as duas equipes já estejam disponíveis. Mantenham-se hidratados — uma pausa de 2 minutos para hidratação pode ser feita antes de iniciar a partida, se solicitada.')+
             li('Em disputa de ponto entre capitães, o árbitro decide conforme seu julgamento ou anula o ponto e pede a repetição do saque.')+
-            li('Arbitragem colaborativa — os árbitros são convocados pela organização. O registro dos resultados é feito pela equipe de apoio designada.')+
-            li('Trocas de jogadores só com aviso prévio e aprovação da Comissão Organizadora, e sempre com integrantes do 4BROS.')+
           '</ul>'+
         '</div>'+
 
-        // ---- Atrasos, W.O. e penalidades ----
+        // ---- Situações específicas ----
         '<div class="card">'+
-          '<div class="card-title" style="margin-bottom:10px">Atrasos, W.O. e penalidades</div>'+
+          '<div class="card-title" style="margin-bottom:10px">Situações específicas</div>'+
           '<ul style="font-size:13.5px;margin:0;padding-left:18px;line-height:1.7">'+
-            li('Se a equipe não se apresentar com cinco integrantes, há tolerância de <strong>3 minutos</strong> para se organizar; caso contrário, perde a partida automaticamente (W.O.).')+
-            li('A equipe que se apresentar para jogar somente com quatro integrantes inicia a partida com uma <strong>penalidade de 3 pontos</strong>.')+
-            li('Casos omissos neste regulamento são resolvidos pela organização, cuja decisão é final. A organização pode ajustar cronograma ou formato de disputa se necessário, comunicando os capitães.')+
+            li('<strong>Bloqueio na areia:</strong> se a bola tocar no bloqueio, a equipe ainda tem direito a mais 2 toques para devolvê-la. O jogador que bloqueou pode dar o toque seguinte — não é falta, pois o bloqueio não conta como toque individual.')+
+            li('<strong>Bola no teto ou estruturas:</strong> se a bola tocar o teto ou estruturas acima da quadra no 1º ou 2º toque e continuar na mesma metade do campo, o rali segue normalmente. Se bater na parede e voltar ao campo, é considerada bola fora.')+
+          '</ul>'+
+        '</div>'+
+
+        // ---- Atrasos e penalidades ----
+        '<div class="card">'+
+          '<div class="card-title" style="margin-bottom:10px">Atrasos e penalidades</div>'+
+          '<ul style="font-size:13.5px;margin:0;padding-left:18px;line-height:1.7">'+
+            li('Se a equipe não se apresentar com cinco integrantes, há tolerância de <strong>3 minutos</strong> para se organizar.')+
+            li('Equipe que jogar com apenas <strong>quatro integrantes</strong>: pode jogar normalmente, mas perde <strong>3 pontos no ranking em cada jogo</strong> que disputar.')+
+            li('Se um jogador se machucar e a equipe tiver que seguir com quatro: para ser justo com as equipes completas, a equipe perde <strong>1 ponto no ranking em cada jogo</strong>.')+
+            li('Falar com o árbitro sem ser o capitão (ou não usar a braçadeira de capitão): <strong>−1 ponto</strong> no ranking.')+
+          '</ul>'+
+        '</div>'+
+
+        // ---- Arbitragem e organização ----
+        '<div class="card">'+
+          '<div class="card-title" style="margin-bottom:10px">Arbitragem &amp; organização</div>'+
+          '<ul style="font-size:13.5px;margin:0;padding-left:18px;line-height:1.7">'+
+            li('Arbitragem colaborativa — os árbitros são convocados pela organização. Haverá também bandeirinhas de linha de fundo.')+
+            li('O registro dos resultados é feito pela equipe de apoio designada pela organização.')+
+            li('Trocas de jogadores só com aviso prévio e aprovação da Comissão Organizadora, e sempre com integrantes do 4BROS.')+
+            li('A organização pode ajustar o cronograma ou o formato de disputa se necessário, comunicando os capitães. Casos omissos são resolvidos pela organização, cuja decisão é final.')+
           '</ul>'+
         '</div>'+
 
@@ -1732,6 +1755,19 @@
         '<div class="card">'+
           '<div class="card-title" style="margin-bottom:10px">Uniforme</div>'+
           '<p style="font-size:13.5px">Todos podem usar o uniforme do 4BROS e recebem um adesivo com o escudo do seu time. <strong>Não é permitido</strong> utilizar uniformes de outros times. As equipes podem usar coletes, camisetas ou regatas de mesma cor, se preferirem — evitando infortúnios desnecessários.</p>'+
+        '</div>'+
+
+        // ---- Premiações extras ----
+        '<div class="card">'+
+          '<div class="card-title" style="margin-bottom:6px">Premiações extras</div>'+
+          '<p class="helptext" style="margin-bottom:12px">Além do troféu, dois prêmios especiais escolhidos pela organização ao longo dos jogos:</p>'+
+          '<div style="font-size:13.5px;line-height:1.6">'+
+            '<p style="margin:0 0 4px"><strong>🏐 Bola Cheia</strong></p>'+
+            '<p style="margin:0 0 12px">Para o lance mais espetacular e surpreendente — uma defesa impossível, uma busca que nem o Bernardinho tentaria, uma jogada inesperada. Não é para quem jogou melhor ou fez mais pontos: é aquele momento especial da partida.</p>'+
+            '<p style="margin:0 0 4px"><strong>🏐 Bola Murcha</strong></p>'+
+            '<p style="margin:0 0 12px">Para o momento mais engraçado ou inusitado — a manchete que deu errado, o saque direto na pilastra. No melhor estilo "Troféu Abacaxi do Chacrinha". A ideia não é ridicularizar ninguém: quem for indicado é consultado antes.</p>'+
+            '<p style="margin:0">Durante os jogos, qualquer pessoa pode gritar <strong>"BOLA CHEIA!"</strong> ou <strong>"BOLA MURCHA!"</strong>. A organização entra em ação no "VAR do torneio" e escolhe os melhores momentos no final.</p>'+
+          '</div>'+
         '</div>'+
       '</div>';
   }
