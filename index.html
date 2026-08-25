@@ -1096,6 +1096,7 @@
   var TABS = [
     {id:"inicio", label:"Início"},
     {id:"equipes", label:"Equipes"},
+    {id:"coordenacao", label:"Coordenação"},
     {id:"jogos", label:"Jogos"},
     {id:"tabela", label:"Tabela"},
     {id:"playoffs", label:"Playoffs"},
@@ -1505,6 +1506,47 @@
       '<div class="teams-grid teams-grid-public">'+cards+'</div>';
   }
 
+  /* ---------------- views: COORDENAÇÃO ---------------- */
+  function viewCoordenacao(){
+    // Juízes: placeholders até termos nomes e fotos (o admin/organização envia depois).
+    var juizes = [ {nome:"A definir", foto:null}, {nome:"A definir", foto:null} ];
+    var jcolors = ["#0E7FA6", "#0F9E8F"];
+    var juizCards = juizes.map(function(j, i){
+      var color = jcolors[i];
+      var av = j.foto
+        ? '<img class="avatar avatar-xl avatar-photo" src="'+j.foto+'" alt="Juiz '+(i+1)+'" />'
+        : '<span class="avatar avatar-xl" style="background:'+color+'66">🧑‍⚖️</span>';
+      return '<div class="card team-card team-card-public" style="--tc:'+color+'">'+
+        '<div class="team-name-tag">Juiz '+(i+1)+'</div>'+
+        '<div class="captain-spotlight">'+av+
+          '<span class="cap-label">Arbitragem</span>'+
+          '<span class="cap-name">'+esc(j.nome)+'</span>'+
+        '</div>'+
+      '</div>';
+    }).join("");
+
+    // Time de apoio "Ajudantes do Papai Noel" — em ordem alfabética.
+    var color2 = "#C0392B";
+    var ajudantes = ["Aleff","André Luiz","Douglas Pedroso","Eduardo Pacheco","Felipe Rangel","Ico Prado","Leonardo Cardoso","Marcos Schenkel","Matheus Venturini","Robson Junior"];
+    var membersHtml = ajudantes.map(function(nome){
+      return '<div class="member-tile">'+
+        '<span class="avatar avatar-lg" style="background:'+color2+'66;color:var(--ink)">'+initials(nome)+'</span>'+
+        '<span class="name">'+esc(nome)+'</span></div>';
+    }).join("");
+    var ajudantesCard = '<div class="card team-card team-card-public" style="--tc:'+color2+'">'+
+        '<div class="team-name-tag">Ajudantes do Papai Noel</div>'+
+        '<div class="team-card-corner"><div class="team-logo-wrap"><span class="avatar" style="background:'+color2+';font-size:46px">🎅</span></div></div>'+
+        '<div class="members-grid">'+membersHtml+'</div>'+
+      '</div>';
+
+    return '<div class="page-head"><div>'+
+        '<div class="eyebrow">Organização</div><h2 class="page-title">Coordenação</h2>'+
+        '<p class="page-sub">Arbitragem e equipe de apoio do torneio</p>'+
+      '</div></div>'+
+      '<div class="teams-grid teams-grid-public">'+juizCards+'</div>'+
+      '<div class="teams-grid teams-grid-public" style="margin-top:64px">'+ajudantesCard+'</div>';
+  }
+
   /* ---------------- views: REGRAS ---------------- */
   function viewRegras(){
     // Item de lista padrão do regulamento (bullet + texto).
@@ -1832,7 +1874,7 @@
   /* ---------------- render ---------------- */
   function renderContent(){
     var el = document.getElementById("content");
-    var fn = { inicio:viewInicio, tabela:viewTabela, jogos:viewJogos, playoffs:viewPlayoffs, equipes:viewEquipes, regras:viewRegras, admin:viewAdmin };
+    var fn = { inicio:viewInicio, tabela:viewTabela, jogos:viewJogos, playoffs:viewPlayoffs, equipes:viewEquipes, coordenacao:viewCoordenacao, regras:viewRegras, admin:viewAdmin };
     el.innerHTML = (fn[route] || viewInicio)();
     bindContentEvents();
   }
