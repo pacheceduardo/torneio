@@ -840,7 +840,8 @@
         return team;
       }),
       games: generateSchedule(TEAM_SEED),
-      playoffs: { generated:false, seeds:[], scores:{} }
+      playoffs: { generated:false, seeds:[], scores:{} },
+      revelarCompeticao: false
     };
   }
 
@@ -1104,9 +1105,20 @@
 
   function isAdminAuthed(){ return sessionStorage.getItem(SESSION_KEY) === "1" || localStorage.getItem(SESSION_KEY) === "1"; }
 
+  // Jogos, Tabela e Playoffs ficam ocultos até o torneio começar (contador zerar),
+  // ou até o admin revelá-los manualmente (para testes). Início, Equipes, Regras
+  // e Admin ficam sempre visíveis.
+  var HIDDEN_UNTIL_START = ["jogos","tabela","playoffs"];
+  function competitionVisible(){
+    return !!state.revelarCompeticao || (Date.now() >= COUNTDOWN_TARGET.getTime());
+  }
+
   function renderNav(){
     var el = document.getElementById("navbar-inner");
-    el.innerHTML = TABS.map(function(t){
+    var vis = competitionVisible();
+    el.innerHTML = TABS.filter(function(t){
+      return !(HIDDEN_UNTIL_START.indexOf(t.id) !== -1 && !vis);
+    }).map(function(t){
       var lock = t.id==="admin" && !isAdminAuthed() ? '<span class="lock">🔒</span>' : "";
       return '<button class="tab'+(route===t.id?" active":"")+'" data-route="'+t.id+'">'+t.label+lock+'</button>';
     }).join("");
@@ -1164,6 +1176,8 @@
         dEl.textContent="00"; hEl.textContent="00"; mEl.textContent="00"; sEl.textContent="00";
         var lab=document.getElementById("cd-when-lab"); if(lab) lab.textContent="O torneio começou! 🏐";
         if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
+        // revela Jogos, Tabela e Playoffs automaticamente ao zerar o contador
+        renderNav();
         return;
       }
       var s = Math.floor(diff/1000);
@@ -1787,6 +1801,12 @@
   function adminConfig(){
     return '<div class="stack">'+
       '<div class="card">'+
+        '<div class="card-title" style="margin-bottom:6px">Visibilidade das páginas</div>'+
+        '<p class="helptext" style="margin-bottom:10px">Jogos, Tabela e Playoffs ficam ocultos até o contador da página inicial zerar. Ligue o interruptor abaixo para revelá-los agora (para testes).</p>'+
+        '<label class="checkline"><input type="checkbox" id="chk-revelar" '+(state.revelarCompeticao?"checked":"")+' /> Revelar Jogos, Tabela e Playoffs agora</label>'+
+        '<p class="helptext" id="revelar-status" style="margin-top:6px"></p>'+
+      '</div>'+
+      '<div class="card">'+
         '<div class="card-title" style="margin-bottom:10px">Alterar PIN</div>'+
         '<div class="row">'+
           '<div class="field"><label>PIN atual</label><input type="password" inputmode="numeric" id="pin-old" /></div>'+
@@ -1818,6 +1838,8 @@
   }
 
   function render(){
+    // trava de segurança: não deixa cair numa página oculta
+    if(HIDDEN_UNTIL_START.indexOf(route) !== -1 && !competitionVisible()) route = "inicio";
     renderNav();
     renderContent();
   }
@@ -2016,6 +2038,24 @@
   }
 
   function bindAdminConfig(){
+    var chkRev = document.getElementById("chk-revelar");
+    if(chkRev){
+      var stat = document.getElementById("revelar-status");
+      function updRevStatus(){
+        if(!stat) return;
+        if(Date.now() >= COUNTDOWN_TARGET.getTime()) stat.textContent = "O contador já terminou — as páginas estão visíveis para todos.";
+        else if(state.revelarCompeticao) stat.textContent = "Reveladas manualmente: Jogos, Tabela e Playoffs estão visíveis agora.";
+        else stat.textContent = "Ocultas — só aparecem quando o contador zerar.";
+      }
+      updRevStatus();
+      chkRev.addEventListener("change", function(e){
+        state.revelarCompeticao = e.target.checked;
+        saveState();
+        toast(e.target.checked ? "Páginas reveladas" : "Páginas ocultadas");
+        render();
+      });
+    }
+
     document.getElementById("btn-change-pin").addEventListener("click", function(){
       var oldV = document.getElementById("pin-old").value, newV = document.getElementById("pin-new").value;
       if(oldV !== state.pin){ toast("PIN atual incorreto", "danger"); return; }
