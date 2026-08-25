@@ -1587,11 +1587,10 @@
         ? '<button class="btn btn-sm juiz-open" data-jix="'+i+'" style="margin-top:10px">📖 Ver biografia</button>'
         : '';
       return '<div class="card team-card team-card-public juiz-card" style="--tc:'+color+'">'+
-        '<div class="team-name-tag">Juiz '+(i+1)+'</div>'+
+        '<div class="team-name-tag">'+esc(j.role||"Árbitro")+'</div>'+
         '<div class="juiz-photo juiz-open" data-jix="'+i+'" role="button" tabindex="0" title="Ver biografia de '+esc(j.nome)+'">'+photo+'</div>'+
         '<div class="juiz-info">'+
           '<span class="cap-name">'+esc(j.nome)+'</span>'+
-          '<span class="cap-label">'+esc(j.role||"Arbitragem")+'</span>'+
           bioBtn+
         '</div>'+
       '</div>';
