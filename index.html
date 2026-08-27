@@ -601,7 +601,21 @@
 
   var STORAGE_KEY = "h0_2026_state_v2";
   var SESSION_KEY = "h0_2026_admin_session";
+  var PIN_KEY = "h0_2026_admin_pin";
   var THEME_KEY = "h0_2026_theme";
+
+  /* ---------- Sincronizacao ao vivo (Supabase) ----------
+     Estado compartilhado: todos leem a mesma linha publica; o admin grava via
+     RPC protegida por PIN (validado no servidor). As fotos/logos NAO vao no
+     payload (vem do proprio arquivo, iguais para todos) para nao pesar. */
+  var SB_URL = "https://sytslmhtpgqidexeummk.supabase.co";
+  var SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5dHNsbWh0cGdxaWRleGV1bW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyODY3NDAsImV4cCI6MjEwMDg2Mjc0MH0.NwgKQYiZqhE6V1gmObl9Mlpqfn2oLz9__Kh9BuUbFew";
+  var SB_HEADERS = { "apikey": SB_ANON, "Authorization": "Bearer " + SB_ANON, "Content-Type": "application/json" };
+  var SYNC_POLL_MS = 5000;
+  var lastServerTs = null;   // ultimo updated_at aplicado
+  var adminPin = null;       // definido no login do admin; usado para gravar
+  var pushTimer = null;      // debounce das gravacoes
+  var suppressPush = false;  // ao aplicar estado remoto, nao reenviar
 
   var TEAM_SEED = [
     {id:"t1", nome:"Beartic Five", capitao:"William Narz", membros:["Douglas Azura","Ismael Muniz","Jônata Machado","Moisés Moreira"]},
@@ -916,6 +930,69 @@
     }catch(e){
       toast("Armazenamento cheio. Remova alguma foto/logo ou exporte um backup", "danger");
     }
+    if(adminPin && !suppressPush) schedulePush();
+  }
+
+  /* ---------- Sincronizacao ao vivo ---------- */
+  // Estado "leve": tudo menos as fotos/logos em base64 (essas vem do arquivo).
+  function liteState(s){
+    var c = JSON.parse(JSON.stringify(s));
+    delete c.pin;
+    (c.teams || []).forEach(function(t){
+      t.logo = null; t.capitaoFoto = null;
+      (t.membros || []).forEach(function(m){ m.foto = null; });
+    });
+    return c;
+  }
+  // Reinjeta as fotos/logos do seed (do proprio arquivo) sobre o estado recebido.
+  function hydrateMedia(s){
+    (s.teams || []).forEach(function(t){
+      if(!Array.isArray(t.membros)) t.membros = [];
+      if(!Array.isArray(t.fotosPorJogador) || t.fotosPorJogador.length !== t.membros.length){
+        t.fotosPorJogador = t.membros.map(function(){ return false; });
+      }
+      applyMediaSeed(t, true);
+      t.fotoCapitao = !!t.capitaoFoto;
+      t.membros.forEach(function(m, i){ t.fotosPorJogador[i] = !!m.foto; });
+    });
+    return s;
+  }
+  function applyServerState(srv){
+    if(!srv || !srv.state || !srv.state.teams || !srv.state.games) return false;
+    lastServerTs = srv.updated_at;
+    suppressPush = true;
+    state = hydrateMedia(srv.state);
+    saveState();
+    suppressPush = false;
+    return true;
+  }
+  function syncPull(){
+    fetch(SB_URL + "/rest/v1/torneio_estado?id=eq.1&select=state,updated_at", { headers: SB_HEADERS })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(rows){ if(rows && rows.length && applyServerState(rows[0])) render(); })
+      .catch(function(){});
+  }
+  function syncPoll(){
+    fetch(SB_URL + "/rest/v1/torneio_estado?id=eq.1&select=updated_at", { headers: SB_HEADERS })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(rows){
+        if(rows && rows.length && rows[0].updated_at && rows[0].updated_at !== lastServerTs) syncPull();
+      })
+      .catch(function(){});
+  }
+  function schedulePush(){
+    if(pushTimer) clearTimeout(pushTimer);
+    pushTimer = setTimeout(pushNow, 600);
+  }
+  function pushNow(){
+    if(!adminPin) return;
+    fetch(SB_URL + "/rest/v1/rpc/torneio_salvar", {
+      method: "POST", headers: SB_HEADERS,
+      body: JSON.stringify({ _pin: adminPin, _state: liteState(state) })
+    })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t); }); return r.json(); })
+    .then(function(ts){ if(typeof ts === "string") lastServerTs = ts; })
+    .catch(function(){ toast("Nao consegui publicar ao vivo agora.", "danger"); });
   }
 
   function resizeImageFile(file, maxDim, format, quality, cb){
@@ -1167,7 +1244,7 @@
     {id:"admin", label:"Admin"}
   ];
 
-  function isAdminAuthed(){ return sessionStorage.getItem(SESSION_KEY) === "1" || localStorage.getItem(SESSION_KEY) === "1"; }
+  function isAdminAuthed(){ return sessionStorage.getItem(SESSION_KEY) === "1"; }
 
   // Jogos, Tabela e Playoffs ficam ocultos até o torneio começar (contador zerar),
   // ou até o admin revelá-los manualmente (para testes). Início, Equipes, Regras
@@ -2029,17 +2106,29 @@
       var input = document.getElementById("pin-input");
       var submit = document.getElementById("pin-submit");
       var err = document.getElementById("pin-err");
+      function grantAdmin(pin){
+        adminPin = pin;
+        try{ sessionStorage.setItem(SESSION_KEY, "1"); sessionStorage.setItem(PIN_KEY, pin); }catch(e){}
+        err.style.display = "none";
+        render();
+      }
+      function denyAdmin(){ err.style.display = "block"; input.value = ""; input.focus(); }
       function tryLogin(){
-        if(input.value === state.pin){
-          sessionStorage.setItem(SESSION_KEY, "1");
-          localStorage.setItem(SESSION_KEY, "1");
-          err.style.display = "none";
-          render();
-        } else {
-          err.style.display = "block";
-          input.value = "";
-          input.focus();
-        }
+        var pin = input.value;
+        if(!pin){ denyAdmin(); return; }
+        submit.disabled = true;
+        fetch(SB_URL + "/rest/v1/rpc/torneio_pin_ok", {
+          method: "POST", headers: SB_HEADERS, body: JSON.stringify({ _pin: pin })
+        })
+        .then(function(r){ if(!r.ok) throw new Error("http"); return r.json(); })
+        .then(function(ok){ submit.disabled = false; if(ok === true) grantAdmin(pin); else denyAdmin(); })
+        .catch(function(){
+          // Servidor indisponivel (ou SQL ainda nao aplicado): valida local, sem
+          // publicar ao vivo, para nao travar o admin.
+          submit.disabled = false;
+          if(pin === state.pin){ try{ sessionStorage.setItem(SESSION_KEY, "1"); }catch(e){} err.style.display = "none"; render(); }
+          else denyAdmin();
+        });
       }
       submit.addEventListener("click", tryLogin);
       input.addEventListener("keydown", function(e){ if(e.key==="Enter") tryLogin(); });
@@ -2054,7 +2143,10 @@
       });
       var logout = document.getElementById("btn-logout");
       if(logout) logout.addEventListener("click", function(){
-        sessionStorage.removeItem(SESSION_KEY); localStorage.removeItem(SESSION_KEY); render();
+        adminPin = null;
+        sessionStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(PIN_KEY);
+        localStorage.removeItem(SESSION_KEY);
+        render();
       });
 
       if(adminSub==="placar") bindAdminPlacar();
@@ -2216,10 +2308,24 @@
 
     document.getElementById("btn-change-pin").addEventListener("click", function(){
       var oldV = document.getElementById("pin-old").value, newV = document.getElementById("pin-new").value;
-      if(oldV !== state.pin){ toast("PIN atual incorreto", "danger"); return; }
-      if(!newV || newV.length < 4){ toast("Novo PIN precisa ter ao menos 4 dígitos", "danger"); return; }
-      state.pin = newV; saveState(); toast("PIN alterado com sucesso");
-      document.getElementById("pin-old").value=""; document.getElementById("pin-new").value="";
+      if(!newV || newV.length < 6){ toast("Novo PIN precisa ter ao menos 6 caracteres", "danger"); return; }
+      var btn = this; btn.disabled = true;
+      function limpa(){ document.getElementById("pin-old").value=""; document.getElementById("pin-new").value=""; }
+      fetch(SB_URL + "/rest/v1/rpc/torneio_trocar_pin", {
+        method: "POST", headers: SB_HEADERS, body: JSON.stringify({ _pin_atual: oldV, _pin_novo: newV })
+      })
+      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t); }); })
+      .then(function(){
+        adminPin = newV; state.pin = newV;
+        try{ sessionStorage.setItem(PIN_KEY, newV); }catch(e){}
+        saveState(); toast("PIN alterado no servidor com sucesso"); limpa();
+      })
+      .catch(function(){
+        // Servidor indisponivel: troca so o PIN local (fallback).
+        if(oldV === state.pin){ state.pin = newV; saveState(); toast("PIN local alterado (servidor indisponivel)"); limpa(); }
+        else toast("PIN atual incorreto", "danger");
+      })
+      .then(function(){ btn.disabled = false; });
     });
 
     document.getElementById("btn-export").addEventListener("click", function(){
@@ -2338,5 +2444,10 @@
   window.addEventListener("orientationchange", function(){ setTimeout(handleViewportChange, 120); });
   createSnow();
   render();
+  // Sincronizacao ao vivo: restaura a sessao do admin, puxa o estado do
+  // servidor e passa a acompanhar mudancas de todo mundo.
+  try{ adminPin = sessionStorage.getItem(PIN_KEY) || null; }catch(e){ adminPin = null; }
+  syncPull();
+  setInterval(syncPoll, SYNC_POLL_MS);
 })();
 </script>
