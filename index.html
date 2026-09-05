@@ -2108,9 +2108,9 @@
     });
   }
   function openFotoFull(id, caption, thumbFallback){
-    fetch(SB_URL + "/rest/v1/torneio_fotos?id=eq." + id + "&select=full", { headers: SB_HEADERS })
+    fetch(SB_URL + "/rest/v1/torneio_fotos?id=eq." + id + "&select=full_img", { headers: SB_HEADERS })
       .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(rows){ var f = rows && rows[0] && rows[0].full; openPhotoModal(f || thumbFallback || "", caption || ""); })
+      .then(function(rows){ var f = rows && rows[0] && rows[0].full_img; openPhotoModal(f || thumbFallback || "", caption || ""); })
       .catch(function(){ openPhotoModal(thumbFallback || "", caption || ""); });
   }
   function makeThumbFull(file, cb){
